@@ -2,9 +2,9 @@ import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import sunset from "@assets/generated_images/Romantic_sunset_couple_silhouette_ab4e893d.png";
-import heartLock from "@assets/generated_images/Heart_lock_with_roses_136925ef.png";
-import coffee from "@assets/generated_images/Romantic_coffee_date_scene_cb7dbe15.png";
+import sunset from "@assets/generated_images/WhatApp.jpeg";
+import heartLock from "@assets/generated_images/WhatApp2.jpeg";
+import coffee from "@assets/generated_images/WhatsApp3.jpeg";
 
 const photos = [
   {
@@ -39,7 +39,7 @@ export function PhotoGallery() {
     <section className="py-16 px-4" data-testid="section-gallery">
       <div className="max-w-4xl mx-auto">
         <h2 className="font-serif text-3xl md:text-4xl text-center mb-12 text-foreground">
-          Our Precious Memories
+          Amar Jaaan!
         </h2>
 
         <div className="relative">

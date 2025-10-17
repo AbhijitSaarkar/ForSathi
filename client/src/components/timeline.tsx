@@ -15,7 +15,7 @@ const events: TimelineEvent[] = [
   {
     date: "First Date",
     title: "Our First Date",
-    description: "Coffee, laughter, and endless conversation that made time stand still.",
+    description: "Technically Momo date but valoi chilo",
   },
   {
     date: "Special Moment",
