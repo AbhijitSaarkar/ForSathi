@@ -1,15 +1,42 @@
 import { useState, useEffect } from "react";
-import { Heart, Mail, Volume2, VolumeX, X } from "lucide-react";
+import { Heart, Mail, Volume2, VolumeX, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import confetti from "canvas-confetti";
+import { PhotoGallery } from "@/components/photo-gallery";
+import { Timeline } from "@/components/timeline";
+import { ShareButton } from "@/components/share-button";
+import { letterTemplates } from "@/data/letters";
 
 export default function Home() {
   const [isLetterOpen, setIsLetterOpen] = useState(false);
   const [isMusicPlaying, setIsMusicPlaying] = useState(false);
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
+  const [currentLetterIndex, setCurrentLetterIndex] = useState(0);
+
+  const currentLetter = letterTemplates[currentLetterIndex];
+
+  const nextLetter = () => {
+    setCurrentLetterIndex((prev) => (prev + 1) % letterTemplates.length);
+  };
+
+  const previousLetter = () => {
+    setCurrentLetterIndex((prev) => (prev - 1 + letterTemplates.length) % letterTemplates.length);
+  };
 
   useEffect(() => {
     const audio = new Audio();
     setAudioElement(audio);
+    
+    const savedMusicPreference = localStorage.getItem("musicPlaying");
+    if (savedMusicPreference === "true") {
+      audio.src = "https://cdn.pixabay.com/download/audio/2022/03/10/audio_c8c38d5c60.mp3";
+      audio.loop = true;
+      audio.volume = 0.3;
+      audio.play().catch(() => {
+        setIsMusicPlaying(false);
+      });
+      setIsMusicPlaying(true);
+    }
     
     return () => {
       audio.pause();
@@ -23,19 +50,53 @@ export default function Home() {
     if (isMusicPlaying) {
       audioElement.pause();
       setIsMusicPlaying(false);
+      localStorage.setItem("musicPlaying", "false");
     } else {
       audioElement.src = "https://cdn.pixabay.com/download/audio/2022/03/10/audio_c8c38d5c60.mp3";
       audioElement.loop = true;
       audioElement.volume = 0.3;
       audioElement.play().catch(() => {
         setIsMusicPlaying(false);
+        localStorage.setItem("musicPlaying", "false");
       });
       setIsMusicPlaying(true);
+      localStorage.setItem("musicPlaying", "true");
     }
   };
 
   const openLetter = () => {
     setIsLetterOpen(true);
+    
+    const duration = 3000;
+    const animationEnd = Date.now() + duration;
+    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
+
+    const randomInRange = (min: number, max: number) => {
+      return Math.random() * (max - min) + min;
+    };
+
+    const interval = setInterval(() => {
+      const timeLeft = animationEnd - Date.now();
+
+      if (timeLeft <= 0) {
+        return clearInterval(interval);
+      }
+
+      const particleCount = 50 * (timeLeft / duration);
+      
+      confetti({
+        ...defaults,
+        particleCount,
+        origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+        colors: ['#F7CAC9', '#F2C572', '#FADADD', '#FF69B4'],
+      });
+      confetti({
+        ...defaults,
+        particleCount,
+        origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+        colors: ['#F7CAC9', '#F2C572', '#FADADD', '#FF69B4'],
+      });
+    }, 250);
   };
 
   const closeLetter = () => {
@@ -73,8 +134,9 @@ export default function Home() {
         ))}
       </div>
 
-      {/* Music toggle button - top right corner */}
-      <div className="absolute top-6 right-6 z-50">
+      {/* Top right controls - Music toggle and Share button */}
+      <div className="absolute top-6 right-6 z-50 flex gap-2">
+        <ShareButton />
         <Button
           size="icon"
           variant="ghost"
@@ -133,11 +195,18 @@ export default function Home() {
           </button>
         </div>
 
-        {/* Footer attribution */}
-        <footer className="mt-auto text-center text-sm text-muted-foreground animate-fade-in" data-testid="text-footer">
-          <p className="font-sans">Made with love by Your Name</p>
-        </footer>
       </div>
+
+      {/* Photo Gallery Section */}
+      <PhotoGallery />
+
+      {/* Timeline Section */}
+      <Timeline />
+
+      {/* Footer attribution */}
+      <footer className="py-8 text-center text-sm text-muted-foreground" data-testid="text-footer">
+        <p className="font-sans">Made with love by Your Name</p>
+      </footer>
 
       {/* Love letter popup modal */}
       {isLetterOpen && (
@@ -182,47 +251,60 @@ export default function Home() {
               <X className="h-5 w-5 text-foreground" />
             </button>
 
+            {/* Letter navigation */}
+            <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 flex justify-between px-2 pointer-events-none">
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={previousLetter}
+                data-testid="button-letter-prev"
+                className="pointer-events-auto bg-background/80 backdrop-blur-sm border border-border hover-elevate active-elevate-2"
+                aria-label="Previous letter"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={nextLetter}
+                data-testid="button-letter-next"
+                className="pointer-events-auto bg-background/80 backdrop-blur-sm border border-border hover-elevate active-elevate-2"
+                aria-label="Next letter"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </Button>
+            </div>
+
             {/* Letter content */}
             <div className="p-8 md:p-12 max-h-[80vh] overflow-y-auto">
               <div className="space-y-6">
+                {/* Letter template indicator */}
+                <div className="flex justify-center gap-1 mb-4">
+                  {letterTemplates.map((_, index) => (
+                    <div
+                      key={index}
+                      className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                        index === currentLetterIndex ? "bg-primary w-6" : "bg-muted-foreground/30"
+                      }`}
+                    />
+                  ))}
+                </div>
+
                 {/* Letter heading */}
-                <h2 className="font-cursive text-4xl md:text-5xl text-center text-primary mb-8">
-                  My Dearest Sathi
+                <h2 className="font-cursive text-4xl md:text-5xl text-center text-primary mb-8" data-testid="text-letter-heading">
+                  {currentLetter.title}
                 </h2>
 
                 {/* Love letter text in cursive handwriting style */}
                 <div className="font-script text-lg md:text-xl leading-relaxed text-foreground space-y-4">
-                  <p data-testid="text-letter-paragraph-1">
-                    As I write these words, my heart overflows with emotions that mere language struggles to capture. 
-                    You have brought light into my life in ways I never imagined possible.
-                  </p>
+                  {currentLetter.paragraphs.map((paragraph, index) => (
+                    <p key={index} data-testid={`text-letter-paragraph-${index}`}>
+                      {paragraph}
+                    </p>
+                  ))}
                   
-                  <p data-testid="text-letter-paragraph-2">
-                    Every moment spent with you feels like a beautiful dream from which I never want to wake. 
-                    Your laughter is the melody that brightens my darkest days, and your smile is the sunshine 
-                    that warms my soul.
-                  </p>
-                  
-                  <p data-testid="text-letter-paragraph-3">
-                    In you, I have found not just love, but a kindred spirit, a best friend, and a partner 
-                    who understands me in ways no one else ever has. Your presence in my life has transformed 
-                    ordinary moments into extraordinary memories.
-                  </p>
-                  
-                  <p data-testid="text-letter-paragraph-4">
-                    I cherish every conversation we share, every laugh we exchange, and every silent moment 
-                    where words are unnecessary because our hearts speak their own language.
-                  </p>
-                  
-                  <p data-testid="text-letter-paragraph-5">
-                    Thank you for being exactly who you are—beautiful, kind, intelligent, and wonderfully unique. 
-                    You inspire me to be better, to dream bigger, and to love deeper.
-                  </p>
-                  
-                  <p className="text-center mt-8 font-cursive text-2xl md:text-3xl text-primary" data-testid="text-letter-signature">
-                    Forever yours,
-                    <br />
-                    <span className="text-foreground">With all my heart</span>
+                  <p className="text-center mt-8 font-cursive text-2xl md:text-3xl text-primary whitespace-pre-line" data-testid="text-letter-signature">
+                    {currentLetter.signature}
                   </p>
                 </div>
               </div>
